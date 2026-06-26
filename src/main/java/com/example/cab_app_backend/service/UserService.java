@@ -1,7 +1,8 @@
 package com.example.cab_app_backend.service;
 
-import com.example.cab_app_backend.Model.User;
+import com.example.cab_app_backend.model.User;
 import com.example.cab_app_backend.repository.UserRepository;
+import com.example.cab_app_backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // Register a new user
     public String register(User user) {
@@ -48,11 +52,16 @@ public class UserService {
     public Map<String, Object> login(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
 
+
         if (user.isPresent() && user.get().getPassword().equals(password)) {
+
+            String token= jwtUtil.generateToken(user.get());
+
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Login successful!");
-            response.put("userrole", user.get().getUserrole()); // Include userrole
+            response.put("userrole", user.get().getUserrole());
             response.put("userid", user.get().getId());
+            response.put("token", token);
             return response;
         }
 

@@ -1,7 +1,6 @@
 package com.example.cab_app_backend.controller;
 
-import com.example.cab_app_backend.Model.Car;
-import com.example.cab_app_backend.Model.User;
+import com.example.cab_app_backend.model.User;
 import com.example.cab_app_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

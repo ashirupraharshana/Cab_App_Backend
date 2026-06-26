@@ -1,6 +1,6 @@
 package com.example.cab_app_backend.service;
 
-import com.example.cab_app_backend.Model.Car;
+import com.example.cab_app_backend.model.Car;
 import com.example.cab_app_backend.repository.CarRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
