@@ -1,6 +1,6 @@
 package com.example.cab_app_backend.repository;
 
-import com.example.cab_app_backend.Model.Booking;
+import com.example.cab_app_backend.model.Booking;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 

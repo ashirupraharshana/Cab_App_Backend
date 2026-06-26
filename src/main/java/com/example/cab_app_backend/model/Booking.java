@@ -1,4 +1,4 @@
-package com.example.cab_app_backend.Model;
+package com.example.cab_app_backend.model;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
