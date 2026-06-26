@@ -1,14 +1,19 @@
 package com.example.cab_app_backend.service;
 
+import com.example.cab_app_backend.dto.AuthResponse;
+import com.example.cab_app_backend.dto.LoginRequest;
+import com.example.cab_app_backend.dto.RegisterRequest;
+import com.example.cab_app_backend.exception.DuplicateEmailException;
+import com.example.cab_app_backend.exception.InvalidCredentialsException;
+import com.example.cab_app_backend.exception.UserNotFoundException;
 import com.example.cab_app_backend.model.User;
 import com.example.cab_app_backend.repository.UserRepository;
 import com.example.cab_app_backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -20,62 +25,78 @@ public class UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Register a new user
-    public String register(User user) {
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            return "Email already in use!";
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public String register(RegisterRequest request) {
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateEmailException("Email already in use");
         }
 
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPhonenumber(request.getPhonenumber());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUserrole(2);
+        user.setStatus(0);
 
         userRepository.save(user);
-        return "User registered successfully!";
-    }
-    public List<User> getStaffUsers() {
-        return userRepository.findByUserrole(1); // Fetch only staff users
+
+        return "User registered successfully";
     }
 
-    //staff reg
-    public String registerstaff(User user) {
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            return "Email already in use!";
+    public String registerStaff(RegisterRequest request) {
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateEmailException("Email already in use");
         }
 
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPhonenumber(request.getPhonenumber());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUserrole(1);
+        user.setStatus(0);
 
         userRepository.save(user);
-        return "User registered successfully!";
+
+        return "Staff registered successfully";
     }
 
-    public Map<String, Object> login(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
+    public AuthResponse login(LoginRequest request) {
 
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        if (user.isPresent() && user.get().getPassword().equals(password)) {
+        boolean passwordMatches = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
-            String token= jwtUtil.generateToken(user.get());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Login successful!");
-            response.put("userrole", user.get().getUserrole());
-            response.put("userid", user.get().getId());
-            response.put("token", token);
-            return response;
+        if (!passwordMatches) {
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        // Return an error message
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("message", "Invalid email or password!");
-        return errorResponse;
+        String token = jwtUtil.generateToken(user);
+
+        return new AuthResponse(
+                "Login successful",
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getUserrole(),
+                token
+        );
     }
 
+    public List<User> getStaffUsers() {
+        return userRepository.findByUserrole(1);
+    }
 
-    // Get all users
     public Iterable<User> getAllUsers() {
         return userRepository.findAll();
     }
+
     public Optional<User> getUserById(String id) {
         return userRepository.findById(id);
     }
@@ -84,16 +105,13 @@ public class UserService {
         userRepository.save(user);
     }
 
-
-
     public boolean deleteUser(String id) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            userRepository.deleteById(id);
-            return true;
+
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException("User not found");
         }
-        return false;
+
+        userRepository.deleteById(id);
+        return true;
     }
-
 }
-

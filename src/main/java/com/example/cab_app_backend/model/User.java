@@ -11,7 +11,7 @@ public class User {
     private String id;
     private String username;
     private String email;
-    private int phonenumber;
+    private String phonenumber;
     private String password;
     private int userrole;
     private int  Status = 0;
